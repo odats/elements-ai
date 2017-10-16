@@ -1,0 +1,49 @@
+google-cloud-sdk-linux# source completion.bash.inc
+google-cloud-sdk-linux# source path.bash.inc
+
+export YOUR_GCS_BUCKET=hip-beaker-178913
+
+gsutil cp data/train.record gs://${YOUR_GCS_BUCKET}/data/train.record
+gsutil cp data/test.record gs://${YOUR_GCS_BUCKET}/data/test.record
+gsutil cp data/object_detection.pbtxtx gs://${YOUR_GCS_BUCKET}/data/object_detection.pbtxt
+
+gsutil cp models/faster_rcnn_resnet101_coco_11_06_2017/model.ckpt.* gs://${YOUR_GCS_BUCKET}/data/
+
+gsutil cp training/faster_rcnn_resnet101_pets.config gs://${YOUR_GCS_BUCKET}/data/model.config
+
+
+
+# From tensorflow/models/
+gcloud ml-engine jobs submit training `whoami`_object_detection_`date +%s` \
+    --job-dir=gs://${YOUR_GCS_BUCKET}/train \
+    --packages dist/object_detection-0.1.tar.gz,slim/dist/slim-0.1.tar.gz \
+    --module-name object_detection.train \
+    --region europe-west1 \
+    --config object_detection/samples/cloud/cloud.yml \
+    -- \
+    --train_dir=gs://${YOUR_GCS_BUCKET}/train \
+    --pipeline_config_path=gs://${YOUR_GCS_BUCKET}/data/model.config
+
+
+gcloud ml-engine jobs submit training `whoami`_object_detection_eval_`date +%s` \
+    --job-dir=gs://${YOUR_GCS_BUCKET}/train \
+    --packages dist/object_detection-0.1.tar.gz,slim/dist/slim-0.1.tar.gz \
+    --module-name object_detection.eval \
+    --region europe-west1 \
+    --scale-tier BASIC_GPU \
+    -- \
+    --checkpoint_dir=gs://${YOUR_GCS_BUCKET}/train \
+    --eval_dir=gs://${YOUR_GCS_BUCKET}/eval \
+    --pipeline_config_path=gs://${YOUR_GCS_BUCKET}/data/model.config
+
+
+
+gcloud ml-engine jobs submit training `whoami`_object_detection_`date +%s` \
+    --job-dir=gs://${YOUR_GCS_BUCKET}/train \
+    --packages dist/object_detection-0.1.tar.gz,slim/dist/slim-0.1.tar.gz \
+    --module-name object_detection.train \
+    --region europe-west1 \
+    --scale-tier PREMIUM_1 \
+    -- \
+    --train_dir=gs://${YOUR_GCS_BUCKET}/train \
+    --pipeline_config_path=gs://${YOUR_GCS_BUCKET}/data/faster_rcnn_inception_resnet_v2_atrous_pets_1.config
