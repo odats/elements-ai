@@ -1,3 +1,19 @@
+
+
+#--------------------------------------------------------------------------------------------------------------------
+# Configure environment:
+
+https://www.tensorflow.org/install/install_mac
+pip install tensorflow
+pip install opencv-python
+pip install shapely
+pip install google-cloud
+
+
+
+#--------------------------------------------------------------------------------------------------------------------
+# Train Model
+
 to label images use https://github.com/tzutalin/labelImg
 
 python xml_to_csv.py
